@@ -35,32 +35,6 @@ set list listchars=tab:>.,trail:.
 " Open new tab with Ctrl-T
 " nnoremap <C-t> :tabnew<CR>
 
-""" Use ag for Ctrl-P plugin
-if executable('ag')
-  " Use Ag over Grep
-  set grepprg=ag\ --nogroup\ --nocolor
-
-  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
-endif
-
-""" Use cscope
-function! LoadCscope()
-  let db = findfile("cscope.out", ".;")
-  if (!empty(db))
-    let path = strpart(db, 0, match(db, "/cscope.out$"))
-    set nocscopeverbose " suppress 'duplicate connection' error
-    exe "cs add " . db . " " . path
-    set cscopeverbose
-  endif
-endfunction
-au BufEnter /* call LoadCscope()
-
-" Toggle line numbers with C-n
-map <C-n> :set number!<CR>
-" Toggle non-printable characters with C-N
-map <C-N> :set list!<CR>
-
 " Navigate between tabs with Ctrl-h/Ctrl-l
 nnoremap <C-h> :tabprev<CR>
 nnoremap <C-l> :tabnext<CR>
@@ -71,21 +45,74 @@ noremap <Left> <Nop>
 noremap <Right> <Nop>
 noremap <Up> <Nop>
 
+" Use Ctrl+j/k for navigation in insert mode.
+inoremap <C-j> <Down>
+inoremap <C-k> <Up>
+
 " Highlight syntax
 syntax on
 
 " Always display a status line
 set laststatus=2
 
-" This is for my Mac: map § to ESC
-inoremap § <ESC>
+""" My bindings
+" Map Space as Leader key
+let mapleader=" "
 
+" Disable highlighting when Enter is pressed
+nnoremap <CR> :noh<CR><CR>
+
+" Invoke 'make'
+nnoremap <Leader>m :make all -j40<CR>
+
+" Open a new tab
+nnoremap <Leader>t :tabnew<CR>
+
+" Close window
+nnoremap <Leader>q :q<CR>
+
+""" Quickfix bindings
+" Open Quickfix if there are errors, close otherwise
+nnoremap <Leader>cc :cwindow<CR>
+
+" Close Quickfix window
+nnoremap <Leader>cd :cclose<CR>
+" Next error
+nnoremap <Leader>cn :cnext<CR>
+" Previous error
+nnoremap <Leader>cp :cprev<CR>
+
+""" Lsp key binding
+" Show declaration
+nnoremap <Leader>ld :LspDeclaration<CR>
+" Show declaration in preview window
+nnoremap <Leader>lc :LspPeekDeclaration<CR>
+" Show definition
+nnoremap <Leader>lf :LspDefinition<CR>
+" Show definition in new window
+nnoremap <Leader>lv :LspPeekDefinition<CR>
+" Show references
+nnoremap <Leader>lr :LspReferences<CR>
+" Show type definition
+nnoremap <Leader>lt :LspTypeDefinition<CR>
+" Show type hierarchy
+nnoremap <Leader>lh :LspTypeHierarchy<CR>
+" Jump to next error
+nnoremap <Leader>ln :LspNextError<CR>
+" Jump to previous error
+nnoremap <Leader>lp :LspPreviousError<CR>
+
+""" Local vimrc settings
 " Load the closest .lvimrc
 let g:localvimrc_count=1
 " Don't ask before sourcing .lvimrc
 let g:localvimrc_ask=0
+
+""" vim-lsp logging
+"let g:lsp_log_verbose = 1
+"let g:lsp_log_file = expand('~/vim-lsp.log')
 """"""""""""""""""""""""
-""" Configure Vundle """
+""" Configure Vundle plugin manager """
 filetype off
 
 " set the runtime path to include Vundle and initialize
@@ -105,17 +132,26 @@ Plugin 'morhetz/gruvbox'
 " Local vim configs (.lvimrc)
 Plugin 'embear/vim-localvimrc'
 
+""" LSP support
+Plugin 'prabirshrestha/async.vim'
+Plugin 'prabirshrestha/asyncomplete.vim'
+Plugin 'prabirshrestha/asyncomplete-lsp.vim'
+Plugin 'prabirshrestha/vim-lsp'
+
 call vundle#end()            " required
 filetype plugin indent on    " required
 
 """ Configure CtrlP
 " Show up to 80 results
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:80'
+
 " Configure cache
 let g:ctrlp_clear_cache_on_exit = 0
 let g:ctrlp_cache_dir = '/data/cache/ctrlp'
+
 " Open multiple files in new tabs
 let g:ctrlp_open_multiple_files = 'tjr'
+
 " Search by filename by default
 let g:ctrlp_by_filename = 1
 
@@ -124,3 +160,32 @@ set termguicolors
 "colorscheme solarized8
 colorscheme gruvbox
 
+""" LSP support
+" Register Clangd-9 if present
+if executable('clangd-mp-9.0')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'clangd',
+        \ 'cmd': {server_info->[
+               \ 'clangd-mp-9.0',
+               \ '-background-index',
+               \  '-log=info',
+               \ '--query-driver=/usr/bin/c++']},
+        \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+        \ })
+endif
+
+" Configure vim-lsp
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    let g:lsp_signs_enabled = 1
+    let g:lsp_diagnostics_echo_cursor = 1
+"    let g:lsp_signs_error = {'text': 'x'}
+    let g:lsp_highlight_references_enabled = 1
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
