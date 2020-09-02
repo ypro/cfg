@@ -108,6 +108,10 @@ let g:localvimrc_count=1
 " Don't ask before sourcing .lvimrc
 let g:localvimrc_ask=0
 
+let g:lsp_signs_enabled = 1
+let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_highlight_references_enabled = 3
+
 """ vim-lsp logging
 "let g:lsp_log_verbose = 1
 "let g:lsp_log_file = expand('~/vim-lsp.log')
@@ -132,6 +136,9 @@ Plugin 'morhetz/gruvbox'
 " Local vim configs (.lvimrc)
 Plugin 'embear/vim-localvimrc'
 
+" Fugitive git plugin
+Plugin 'tpope/vim-fugitive'
+
 """ LSP support
 Plugin 'prabirshrestha/async.vim'
 Plugin 'prabirshrestha/asyncomplete.vim'
@@ -155,6 +162,9 @@ let g:ctrlp_open_multiple_files = 'tjr'
 " Search by filename by default
 let g:ctrlp_by_filename = 1
 
+" No file number limit
+let g:ctrlp_max_files = 0
+
 """ Color scheme
 set termguicolors
 "colorscheme solarized8
@@ -174,14 +184,22 @@ if executable('clangd-mp-9.0')
         \ })
 endif
 
+if executable('clangd-9')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'clangd',
+        \ 'cmd': {server_info->[
+               \ 'clangd-9',
+               \ '-background-index',
+               \  '-log=info',
+               \ '--query-driver=/usr/bin/c++']},
+        \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+        \ })
+endif
+
 " Configure vim-lsp
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
-    let g:lsp_signs_enabled = 1
-    let g:lsp_diagnostics_echo_cursor = 1
-"    let g:lsp_signs_error = {'text': 'x'}
-    let g:lsp_highlight_references_enabled = 1
 endfunction
 
 augroup lsp_install
