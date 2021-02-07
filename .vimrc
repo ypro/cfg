@@ -16,7 +16,7 @@ set incsearch
 " Highlight search patterns
 set hlsearch
 
-" Search case insensetive
+" Search case insensitive
 set ignorecase
 
 " Override 'ignorecase' when search pattern contains upper case char.
@@ -30,6 +30,9 @@ set number
 
 " Display trailing spaces and tabs
 set list listchars=tab:>.,trail:.
+
+" Spell checker
+set spell spelllang=en_us
 
 """ Navigation and tabs
 " Open new tab with Ctrl-T
@@ -160,7 +163,7 @@ let g:ctrlp_cache_dir = '/data/cache/ctrlp'
 " Open multiple files in new tabs
 let g:ctrlp_open_multiple_files = 'tjr'
 
-" Search by filename by default
+" Search by file name by default
 let g:ctrlp_by_filename = 1
 
 " No file number limit
