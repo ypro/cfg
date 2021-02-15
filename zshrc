@@ -76,6 +76,7 @@ plugins=( \
 	cargo \
 	fzf \
 	git \
+	vi-mode \
 	z \
 	zsh-autosuggestions \
 )
